@@ -8,8 +8,8 @@
 
 DefenderObd *obd;
 
-bool obd_mock = false;
-bool dump_mode = true;
+bool obd_mock = true;
+bool dump_mode = false;
 
 
 void setup() {
@@ -41,10 +41,17 @@ void loop() {
                 continue;
             }
             if (obd_mock) {
+                //0x0,0x0,0x0,0x1,0x29,0x0,0x0,0x0
+                //0x0,0x0,0x0,0x3,0x8B,0x0,0x0,0x0,
+                //0x0	0x0	0x0	0x1	0x29	0x0	0x0	0x0
+                //0x0	0x0	0x0	0x3	0x8B	0x0	0x0	0x0
+                //0x0	0x0	0x0	0x3	0x8B	0x0	0x0	0x0
                 unsigned char fake_data[8] = {0x0,0x0,0x0,0x3,0x8B,0x0,0x0,0x0};
+
                 parameter->load_block(fake_data);
                 Serial.print("MOCK DATA: ");
                 Serial.println(parameter->get_pretty_value()); //parameter->get_value());
+                Serial.println(parameter->get_pid());
             } else {
                 if(parameter->request_from_obd()) {
                     Serial.println(parameter->get_pretty_value()); //parameter->get_value());

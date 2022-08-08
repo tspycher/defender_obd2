@@ -11,11 +11,11 @@
 class Parameter {
 public:
     Parameter(Serial_CAN &can);
-    void load_block(unsigned char raw_data[8]);
+    void load_block(unsigned char raw_data[]);
     virtual float get_value() = 0;
     bool request_from_obd(unsigned int timeout_ms=1000);
     float get_previous_value();
-    int get_pid();
+    unsigned char get_pid();
     String get_pretty_value();
     String get_name();
 protected:

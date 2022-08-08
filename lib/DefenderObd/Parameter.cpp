@@ -29,7 +29,7 @@ String Parameter::get_pretty_value() {
 
 bool Parameter::request_from_obd(unsigned int timeout_ms) {
     unsigned long __timeout = millis();
-    unsigned char tmp[8] = {0x02, 0x01, (unsigned char)(get_pid()), 0, 0, 0, 0, 0};
+    unsigned char tmp[8] = {0x02, 0x01, get_pid(), 0, 0, 0, 0, 0};
     #if STANDARD_CAN_11BIT
         can.send(CAN_ID_PID, 0, 0, 8, tmp);   // SEND TO ID:0X55
     #else
@@ -40,9 +40,13 @@ bool Parameter::request_from_obd(unsigned int timeout_ms) {
     {
         unsigned long id  = 0;
         unsigned char buf[8];
-        if (can.recv(&id, buf)) {                // check if get data
-            load_block(buf);
-            return true;
+
+        if (can.recv(&id, buf)) {
+            Serial.println(id);
+            if(buf[1] == 0x41) {
+                load_block(buf);
+                return true;
+            }
         }
     }
     return false;
@@ -52,7 +56,7 @@ float Parameter::get_previous_value() {
     return Parameter::previous_value;
 }
 
-int Parameter::get_pid() {
+unsigned char Parameter::get_pid() {
     return pid;
 }
 
@@ -60,9 +64,10 @@ String Parameter::get_name() {
     return name;
 }
 
-void Parameter::load_block(unsigned char raw_data[8]) {
-    for (int i = 0; i < 8; ++i)
-        data[i] = (unsigned char *) raw_data[i];
+void Parameter::load_block(unsigned char raw_data[]) {
+    for (int i = 0; i < 8; ++i) {
+        data[i] = &raw_data[i];
+    }
 }
 
 unsigned char Parameter::get_a() {

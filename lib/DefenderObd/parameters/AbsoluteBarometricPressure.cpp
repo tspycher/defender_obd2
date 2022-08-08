@@ -12,5 +12,5 @@ AbsoluteBarometricPressure::AbsoluteBarometricPressure(Serial_CAN &can) : Parame
 }
 
 float AbsoluteBarometricPressure::get_value() {
-    return (float) (256*get_a()+get_b())/4;
+    return (float) get_a();
 }

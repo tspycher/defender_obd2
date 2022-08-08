@@ -10,7 +10,51 @@
 
 #define can_tx  12       // tx of serial can module, the yellow cable
 #define can_rx  13
-#define can_baud 115200 // 9600
+#define can_baud 9600 // 9600
+
+#define STANDARD_CAN_11BIT      1       // That depends on your car. some 1 some 0.
+
+#if STANDARD_CAN_11BIT
+#define CAN_ID_PID          0x7DF
+#else
+#define CAN_ID_PID          0x18db33f1
+#endif
+
+#if STANDARD_CAN_11BIT
+unsigned long mask[4] =
+{
+    0, 0x7FC,                // ext, maks 0
+    0, 0x7FC,                // ext, mask 1
+};
+
+unsigned long filt[12] =
+{
+    0, 0x7E8,                // ext, filt 0
+    0, 0x7E8,                // ext, filt 1
+    0, 0x7E8,                // ext, filt 2
+    0, 0x7E8,                // ext, filt 3
+    0, 0x7E8,                // ext, filt 4
+    0, 0x7E8,                // ext, filt 5
+};
+
+#else
+unsigned long mask[4] =
+        {
+                1, 0x1fffffff,               // ext, maks 0
+                1, 0x1fffffff,
+        };
+
+unsigned long filt[12] =
+        {
+                1, 0x18DAF110,                // ext, filt
+                1, 0x18DAF110,                // ext, filt 1
+                1, 0x18DAF110,                // ext, filt 2
+                1, 0x18DAF110,                // ext, filt 3
+                1, 0x18DAF110,                // ext, filt 4
+                1, 0x18DAF110,                // ext, filt 5
+        };
+#endif
+
 
 
 DefenderObd::DefenderObd() {
@@ -18,6 +62,8 @@ DefenderObd::DefenderObd() {
     parameters[1] = new AbsoluteBarometricPressure(can);
 
     can.begin(can_tx, can_rx, can_baud);
+    can.setMask(mask);
+    can.setFilt(filt);
 }
 
 int DefenderObd::num_parameters() {
@@ -46,6 +92,9 @@ bool DefenderObd::debug() {
 
     if(can.recv(&id, dta))
     {
+        if (id < 2)
+            return false;
+
         Serial.print("GET DATA FROM ID: ");
         Serial.print(id);
         Serial.print(" Data -> ");
@@ -56,7 +105,7 @@ bool DefenderObd::debug() {
             Serial.print(',');
         }
         Serial.println();
-        Parameter *p = get_parameter(id);
+        Parameter *p = get_parameter(dta[2]); // id
         if (p) {
             p->load_block(dta);
             Serial.print("\tFOUND PARAMETER! Value: ");
