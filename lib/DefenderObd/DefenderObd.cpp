@@ -77,6 +77,7 @@ DefenderObd::DefenderObd(bool with_display) : with_display(with_display) {
         lcd->setCursor(0, 1);
         lcd->send_string("Fucking Can-Bus");
         delay(2000);
+        lcd->clear();
     }
 }
 
@@ -159,9 +160,6 @@ void DefenderObd::update_gauge(int value, int max_value, String name) {
         return;
 
     unsigned int lcd_cols = 16;
-    lcd->clear();
-    lcd->setCursor(0, 0);
-    lcd->send_string(name.c_str());
 
     unsigned int number_of_digits = 0;
     int n = value;
@@ -169,6 +167,12 @@ void DefenderObd::update_gauge(int value, int max_value, String name) {
         ++number_of_digits;
         n /= 10;
     } while (n);
+
+    lcd->setCursor(0, 0);
+    lcd->send_string(name.c_str());
+    for (unsigned int i = 0; i < lcd_cols-(unsigned int)name.length()-number_of_digits; ++i)
+        lcd->write_char(160); //(char)32);
+    lcd->send_string(String(value).c_str());
 
     lcd->setCursor(0, 1);
     unsigned int value_percentage = (unsigned int)(100.0 / (float)max_value * (float)value);
@@ -179,12 +183,11 @@ void DefenderObd::update_gauge(int value, int max_value, String name) {
 
     String gauge;
 
-    for (unsigned int i = 0; i < lcd_cols - number_of_digits; i++) {
+    for (unsigned int i = 0; i < lcd_cols; i++) {
         if(i<= lcd_gauge_value) {
             lcd->write_char(filler); //(char)32);
         } else {
             lcd->write_char(empty); //(char)32);
         }
     }
-    lcd->send_string(String(value).c_str());
 }

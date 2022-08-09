@@ -8,7 +8,7 @@
 
 DefenderObd *obd;
 
-bool obd_mock = false;
+bool obd_mock = true;
 bool dump_mode = false;
 
 bool with_display = true;
@@ -59,15 +59,14 @@ void loop() {
                 parameter->load_block(fake_data);
                 Serial.print("MOCK DATA: ");
                 Serial.println(parameter->get_pretty_value()); //parameter->get_value());
-                obd->update_gauge((int)parameter->get_value() / 10, parameter->get_maximum_value() / 10, "RPM x10");
-                delay(500);
+                obd->update_gauge((int)parameter->get_value(), parameter->get_maximum_value(), "RPM");
             } else {
                 if(parameter->request_from_obd()) {
                     Serial.println(parameter->get_pretty_value()); //parameter->get_value());
-                    obd->update_gauge((int)parameter->get_value() / 10, parameter->get_maximum_value() / 10, "RPM x10");
+                    obd->update_gauge((int)parameter->get_value(), parameter->get_maximum_value(), "RPM");
                 } else {
                     Serial.println("no new OBD Data received");
-                    obd->update_gauge((int)parameter->get_previous_value() / 10, parameter->get_maximum_value() / 10, "RPM x10");
+                    obd->update_gauge((int)parameter->get_previous_value(), parameter->get_maximum_value(), "RPM");
                 }
             }
         }
