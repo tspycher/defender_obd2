@@ -57,13 +57,27 @@ unsigned long filt[12] =
 
 
 
-DefenderObd::DefenderObd() {
+DefenderObd::DefenderObd(bool with_display) : with_display(with_display) {
     parameters[0] = new EngineSpeed(can);
     parameters[1] = new AbsoluteBarometricPressure(can);
 
     can.begin(can_tx, can_rx, can_baud);
     can.setMask(mask);
     can.setFilt(filt);
+
+    if (with_display) {
+        lcd = new Waveshare_LCD1602_RGB(16, 2);  //16 characters and 2 lines of show
+        lcd->init();
+        lcd->noCursor();
+        lcd->setRGB(255, 0, 255);
+        lcd->setCursor(0, 0);
+
+        lcd->send_string("K.I.T.T.T.T.");
+
+        lcd->setCursor(0, 1);
+        lcd->send_string("Fucking Can-Bus");
+        delay(2000);
+    }
 }
 
 int DefenderObd::num_parameters() {
@@ -95,6 +109,13 @@ bool DefenderObd::debug() {
         if (id < 2)
             return false;
 
+        if (with_display) {
+            lcd->clear();
+            lcd->setCursor(0, 0);
+            lcd->write_char(id);
+
+            lcd->setCursor(0, 1);
+        }
         Serial.print("GET DATA FROM ID: ");
         Serial.print(id);
         Serial.print(" Data -> ");
@@ -103,6 +124,8 @@ bool DefenderObd::debug() {
             Serial.print("0x");
             Serial.print(dta[i], HEX);
             Serial.print(',');
+            if (with_display)
+                lcd->write_char(dta[i]);
         }
         Serial.println();
         Parameter *p = get_parameter(dta[2]); // id
@@ -114,5 +137,51 @@ bool DefenderObd::debug() {
         return true;
     }
     Serial.println("no data received");
+    show_message("* OBD DEBUG ****", "NO DATA!");
     return false;
+}
+
+void DefenderObd::show_message(String top, String bottom) {
+    if (!with_display)
+        return;
+    lcd->clear();
+    lcd->setCursor(0, 0);
+    lcd->send_string(top.c_str());
+    lcd->setCursor(0, 1);
+    lcd->send_string(bottom.c_str());
+}
+
+void DefenderObd::update_gauge(int value, int max_value, String name) {
+    if (!with_display)
+        return;
+
+    unsigned int lcd_cols = 16;
+    lcd->clear();
+    lcd->setCursor(0, 0);
+    lcd->send_string(name.c_str());
+
+    unsigned int number_of_digits = 0;
+    int n = value;
+    do {
+        ++number_of_digits;
+        n /= 10;
+    } while (n);
+
+    lcd->setCursor(0, 1);
+    unsigned int value_percentage = 100 / max_value * value;
+    unsigned int lcd_gauge_value = (int) (lcd_cols/ 100.0 * (float)value_percentage);
+
+    char filler = 255;
+    char empty = 219;
+
+    String gauge;
+
+    for (unsigned int i = 0; i < lcd_cols - number_of_digits; i++) {
+        if(i<= lcd_gauge_value) {
+            lcd->write_char(filler); //(char)32);
+        } else {
+            lcd->write_char(empty); //(char)32);
+        }
+    }
+    lcd->send_string(String(value).c_str());
 }

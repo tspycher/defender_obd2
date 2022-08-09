@@ -8,8 +8,9 @@
 
 DefenderObd *obd;
 
-bool obd_mock = true;
-bool dump_mode = false;
+bool obd_mock = false;
+bool dump_mode = true;
+bool with_display = true;
 
 
 void setup() {
@@ -18,7 +19,7 @@ void setup() {
 
     while(!Serial);
 
-    obd = new DefenderObd();
+    obd = new DefenderObd(with_display);
 
     /*can.begin(can_tx, can_rx, 9600);      // tx, rx
     Serial.println("begin");
@@ -52,10 +53,15 @@ void loop() {
                 Serial.print("MOCK DATA: ");
                 Serial.println(parameter->get_pretty_value()); //parameter->get_value());
                 Serial.println(parameter->get_pid());
+
+                obd->update_gauge((int)parameter->get_value() / 100, 6500 / 100, "RPM x100");
             } else {
                 if(parameter->request_from_obd()) {
                     Serial.println(parameter->get_pretty_value()); //parameter->get_value());
+                    obd->update_gauge((int)parameter->get_value() /100, 6500 / 100, "RPM x100");
+
                 } else {
+                    obd->show_message("No Data From", "OBD Received");
                     Serial.println("Could not load data from OBD");
                 }
             }
