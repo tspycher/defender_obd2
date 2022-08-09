@@ -7,10 +7,17 @@
 
 #include "Parameter.h"
 
+#include "MockSerial_CAN_Module.h"
 
 class AbsoluteBarometricPressure : public Parameter {
 public:
+#if MOCK_CAN
+    AbsoluteBarometricPressure(MockSerial_CAN &can);
+#else
     AbsoluteBarometricPressure(Serial_CAN &can);
+#endif
+
+
     int get_value() override;
 };
 #endif //DEFENDEROBD_ABSOLUTEBAROMETRICPRESSURE_H

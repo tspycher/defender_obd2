@@ -3,7 +3,13 @@
 //
 
 #include "AbsoluteBarometricPressure.h"
+#include "DefenderObd.h"
 
+#if MOCK_CAN
+AbsoluteBarometricPressure::AbsoluteBarometricPressure(MockSerial_CAN &can) : Parameter(can)  {
+
+}
+#else
 
 AbsoluteBarometricPressure::AbsoluteBarometricPressure(Serial_CAN &can) : Parameter(can) {
     AbsoluteBarometricPressure::pid = 0x51;
@@ -18,6 +24,7 @@ AbsoluteBarometricPressure::AbsoluteBarometricPressure(Serial_CAN &can) : Parame
     data_bytes = 1;
     previous_value = minimum_value;
 }
+#endif
 
 int AbsoluteBarometricPressure::get_value() {
     return get_a();

@@ -4,7 +4,9 @@
 
 #include "Parameter.h"
 #include <Serial_CAN_Module.h>
+#include <MockSerial_CAN_Module.h>
 #include <Arduino.h>
+#include <DefenderObd.h>
 
 
 #define STANDARD_CAN_11BIT      1       // That depends on your car. some 1 some 0.
@@ -17,14 +19,18 @@
 #endif
 
 
+#if MOCK_CAN
+Parameter::Parameter(MockSerial_CAN &can) : can(can), pid(0x00), name("UNKNOWN"), unit("?"), previous_value(0), current_value(0) {}
+#else
 Parameter::Parameter(Serial_CAN &can) : can(can), pid(0x00), name("UNKNOWN"), unit("?"), previous_value(0) {}
+#endif
 
+int Parameter::get_current_value() {
+    return current_value;
+}
 
 String Parameter::get_pretty_value() {
-    char tmp[16];
-    String val = String("RPM is: ") + get_value();
-    val.toCharArray(tmp, 16);
-    return name + String(" IS: ") + get_value() + unit;
+    return name + String(" IS: ") + get_current_value() + unit;
 }
 
 int Parameter::get_maximum_value() {
@@ -73,10 +79,11 @@ String Parameter::get_name() {
 }
 
 void Parameter::load_block(unsigned char raw_data[]) {
-    previous_value = get_value();
+    previous_value = current_value;
     for (int i = 0; i < 8; ++i) {
         data[i] = &raw_data[i];
     }
+    current_value = get_value();
 }
 
 int Parameter::get_a() {

@@ -5,12 +5,12 @@
 #include "DefenderObd.h"
 #include "parameters/EngineSpeed.h"
 #include "parameters/AbsoluteBarometricPressure.h"
-#include <SoftwareSerial.h>
 #include <Arduino.h>
 
 #define can_tx  12       // tx of serial can module, the yellow cable
 #define can_rx  13
 #define can_baud 9600 // 9600
+
 
 #define STANDARD_CAN_11BIT      1       // That depends on your car. some 1 some 0.
 
@@ -136,7 +136,7 @@ bool DefenderObd::debug() {
         if (p) {
             p->load_block(dta);
             Serial.print("\tFOUND PARAMETER! Value: ");
-            Serial.println(p->get_value());
+            Serial.println(p->get_current_value());
         }
         return true;
     }
@@ -156,11 +156,12 @@ void DefenderObd::show_message(String top, String bottom) {
 }
 
 void DefenderObd::update_gauge(int value, int max_value, String name) {
+
+    Serial.println(value);
     if (!with_display)
         return;
 
     unsigned int lcd_cols = 16;
-
     unsigned int number_of_digits = 0;
     int n = value;
     do {
@@ -185,9 +186,9 @@ void DefenderObd::update_gauge(int value, int max_value, String name) {
 
     for (unsigned int i = 0; i < lcd_cols; i++) {
         if(i<= lcd_gauge_value) {
-            lcd->write_char(filler); //(char)32);
+            lcd->write_char(filler);
         } else {
-            lcd->write_char(empty); //(char)32);
+            lcd->write_char(empty);
         }
     }
 }

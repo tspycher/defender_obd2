@@ -6,14 +6,20 @@
 #define DEFENDEROBD_PARAMETER_H
 
 #include <Serial_CAN_Module.h>
+#include <MockSerial_CAN_Module.h>
 #include <Arduino.h>
+#include <DefenderObd.h>
 
 class Parameter {
 public:
+#if MOCK_CAN
+    Parameter(MockSerial_CAN &can);
+#else
     Parameter(Serial_CAN &can);
+#endif
     void load_block(unsigned char raw_data[]);
-    virtual int get_value() = 0;
     bool request_from_obd(unsigned int timeout_ms=1000);
+    int get_current_value();
     int get_previous_value();
     unsigned char get_pid();
     String get_pretty_value();
@@ -23,11 +29,18 @@ public:
     int get_minimum_value();
 
 protected:
+    virtual int get_value() = 0;
+
+#if MOCK_CAN
+    MockSerial_CAN &can;
+#else
     Serial_CAN &can;
+#endif
     int pid;
     String name;
     String unit;
 
+    int current_value;
     int previous_value;
     int minimum_value;
     int maximum_value;
