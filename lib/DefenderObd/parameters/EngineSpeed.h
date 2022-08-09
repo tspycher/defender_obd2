@@ -10,7 +10,7 @@
 class EngineSpeed : public Parameter {
 public:
     EngineSpeed(Serial_CAN &can);
-    float get_value() override;
+    int get_value() override;
 };
 
 

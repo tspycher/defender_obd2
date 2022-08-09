@@ -62,8 +62,8 @@ DefenderObd::DefenderObd(bool with_display) : with_display(with_display) {
     parameters[1] = new AbsoluteBarometricPressure(can);
 
     can.begin(can_tx, can_rx, can_baud);
-    can.setMask(mask);
-    can.setFilt(filt);
+    //can.setMask(mask);
+    //can.setFilt(filt);
 
     if (with_display) {
         lcd = new Waveshare_LCD1602_RGB(16, 2);  //16 characters and 2 lines of show
@@ -116,16 +116,19 @@ bool DefenderObd::debug() {
 
             lcd->setCursor(0, 1);
         }
-        Serial.print("GET DATA FROM ID: ");
-        Serial.print(id);
-        Serial.print(" Data -> ");
+        Serial.print("id: ");
+        Serial.print((int)id);
+        Serial.print(",");
+
         for(int i=0; i<8; i++)
         {
-            Serial.print("0x");
-            Serial.print(dta[i], HEX);
-            Serial.print(',');
+            Serial.print(i);
+            Serial.print(": ");
+            Serial.print((int)dta[i]);
+            Serial.print(",");
+
             if (with_display)
-                lcd->write_char(dta[i]);
+                lcd->write_char((int)dta[i]);
         }
         Serial.println();
         Parameter *p = get_parameter(dta[2]); // id
@@ -168,8 +171,8 @@ void DefenderObd::update_gauge(int value, int max_value, String name) {
     } while (n);
 
     lcd->setCursor(0, 1);
-    unsigned int value_percentage = 100 / max_value * value;
-    unsigned int lcd_gauge_value = (int) (lcd_cols/ 100.0 * (float)value_percentage);
+    unsigned int value_percentage = (unsigned int)(100.0 / (float)max_value * (float)value);
+    unsigned int lcd_gauge_value = (unsigned int)((float)lcd_cols/ 100.0 * (float)value_percentage);
 
     char filler = 255;
     char empty = 219;

@@ -17,7 +17,7 @@
 #endif
 
 
-Parameter::Parameter(Serial_CAN &can) : can(can), pid(0x00), name("UNKNOWN"), unit("?") {}
+Parameter::Parameter(Serial_CAN &can) : can(can), pid(0x00), name("UNKNOWN"), unit("?"), previous_value(0) {}
 
 
 String Parameter::get_pretty_value() {
@@ -27,7 +27,16 @@ String Parameter::get_pretty_value() {
     return name + String(" IS: ") + get_value() + unit;
 }
 
+int Parameter::get_maximum_value() {
+    return maximum_value;
+}
+
+int Parameter::get_minimum_value() {
+    return minimum_value;
+}
+
 bool Parameter::request_from_obd(unsigned int timeout_ms) {
+
     unsigned long __timeout = millis();
     unsigned char tmp[8] = {0x02, 0x01, get_pid(), 0, 0, 0, 0, 0};
     #if STANDARD_CAN_11BIT
@@ -42,7 +51,6 @@ bool Parameter::request_from_obd(unsigned int timeout_ms) {
         unsigned char buf[8];
 
         if (can.recv(&id, buf)) {
-            Serial.println(id);
             if(buf[1] == 0x41) {
                 load_block(buf);
                 return true;
@@ -52,7 +60,7 @@ bool Parameter::request_from_obd(unsigned int timeout_ms) {
     return false;
 }
 
-float Parameter::get_previous_value() {
+int Parameter::get_previous_value() {
     return Parameter::previous_value;
 }
 
@@ -65,20 +73,21 @@ String Parameter::get_name() {
 }
 
 void Parameter::load_block(unsigned char raw_data[]) {
+    previous_value = get_value();
     for (int i = 0; i < 8; ++i) {
         data[i] = &raw_data[i];
     }
 }
 
-unsigned char Parameter::get_a() {
-    return *data[3];
+int Parameter::get_a() {
+    return (int) *data[3];
 }
-unsigned char Parameter::get_b() {
-    return *data[4];
+int Parameter::get_b() {
+    return (int) *data[4];
 }
-unsigned char Parameter::get_c() {
-    return *data[5];
+int Parameter::get_c() {
+    return (int) *data[5];
 }
-unsigned char Parameter::get_d() {
-    return *data[6];
+int Parameter::get_d() {
+    return (int) *data[6];
 }

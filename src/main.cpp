@@ -9,7 +9,8 @@
 DefenderObd *obd;
 
 bool obd_mock = false;
-bool dump_mode = true;
+bool dump_mode = false;
+
 bool with_display = true;
 
 
@@ -20,12 +21,6 @@ void setup() {
     while(!Serial);
 
     obd = new DefenderObd(with_display);
-
-    /*can.begin(can_tx, can_rx, 9600);      // tx, rx
-    Serial.println("begin");
-    if (do_debug) {
-        Serial.println("RUNNING DEBUG MODE");
-    }*/
 }
 
 void loop() {
@@ -42,31 +37,39 @@ void loop() {
                 continue;
             }
             if (obd_mock) {
-                //0x0,0x0,0x0,0x1,0x29,0x0,0x0,0x0
-                //0x0,0x0,0x0,0x3,0x8B,0x0,0x0,0x0,
-                //0x0	0x0	0x0	0x1	0x29	0x0	0x0	0x0
-                //0x0	0x0	0x0	0x3	0x8B	0x0	0x0	0x0
-                //0x0	0x0	0x0	0x3	0x8B	0x0	0x0	0x0
-                unsigned char fake_data[8] = {0x0,0x0,0x0,0x3,0x8B,0x0,0x0,0x0};
+                long r = random(0,3);
+                unsigned char x;
+
+                switch(r) {
+                    case 0:
+                        x = 0x23;
+                        break;
+                    case 1:
+                        x = 0x37;
+                        break;
+                    case 2:
+                        x = 0x5A;
+                        break;
+                    case 3:
+                        x = 0x41;
+                        break;
+                }
+                unsigned char fake_data[8] = {0x0,0x0,0x0,x,0x64,0x0,0x0,0x0};
 
                 parameter->load_block(fake_data);
                 Serial.print("MOCK DATA: ");
                 Serial.println(parameter->get_pretty_value()); //parameter->get_value());
-                Serial.println(parameter->get_pid());
-
-                obd->update_gauge((int)parameter->get_value() / 100, 6500 / 100, "RPM x100");
+                obd->update_gauge((int)parameter->get_value() / 10, parameter->get_maximum_value() / 10, "RPM x10");
+                delay(500);
             } else {
                 if(parameter->request_from_obd()) {
                     Serial.println(parameter->get_pretty_value()); //parameter->get_value());
-                    obd->update_gauge((int)parameter->get_value() /100, 6500 / 100, "RPM x100");
-
+                    obd->update_gauge((int)parameter->get_value() / 10, parameter->get_maximum_value() / 10, "RPM x10");
                 } else {
-                    obd->show_message("No Data From", "OBD Received");
-                    Serial.println("Could not load data from OBD");
+                    Serial.println("no new OBD Data received");
+                    obd->update_gauge((int)parameter->get_previous_value() / 10, parameter->get_maximum_value() / 10, "RPM x10");
                 }
             }
         }
     }
-
-    delay(1000);
 }

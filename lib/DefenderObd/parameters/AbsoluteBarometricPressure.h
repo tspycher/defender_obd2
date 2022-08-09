@@ -11,6 +11,6 @@
 class AbsoluteBarometricPressure : public Parameter {
 public:
     AbsoluteBarometricPressure(Serial_CAN &can);
-    float get_value() override;
+    int get_value() override;
 };
 #endif //DEFENDEROBD_ABSOLUTEBAROMETRICPRESSURE_H
