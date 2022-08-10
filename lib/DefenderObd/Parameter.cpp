@@ -79,10 +79,17 @@ String Parameter::get_name() {
 }
 
 void Parameter::load_block(unsigned char raw_data[]) {
+    Serial.print("\tLoading Block: ");
     previous_value = current_value;
     for (int i = 0; i < 8; ++i) {
+        Serial.print(i);
+        Serial.print(":0x");
+        Serial.print((int)raw_data[i], HEX);
+        Serial.print(" ");
+
         data[i] = &raw_data[i];
     }
+    Serial.println("Done");
     current_value = get_value();
 }
 

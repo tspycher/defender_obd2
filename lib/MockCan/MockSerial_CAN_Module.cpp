@@ -57,11 +57,34 @@ unsigned char MockSerial_CAN::send(unsigned long id, uchar ext, uchar rtrBit, uc
 // 0: no data
 // 1: get data
 unsigned char MockSerial_CAN::recv(unsigned long *id, uchar *buf) {
-
-    unsigned long timer_s = millis();
-
     int len = 0;
     uchar dta[20];
+
+    uchar a;
+    uchar b;
+
+    switch (millis() % 4) {
+        case 0:
+            *id = 0x0C; // RPM PID
+            a = 0x00 + random(20,120);
+            b = 0x64;
+            break;
+        case 1:
+            *id = 0x0D; // Car Speed
+            a = 0x53;
+            b = 0x00;
+            break;
+        case 2:
+            *id = 0x5C; // Oil Temperature
+            a = 0x8c;
+            b = 0x00;
+            break;
+        case 3:
+            *id = 0x33; // Absolut Barometric Pressure
+            a = 0x80;
+            b = 0x00;
+            break;
+    }
 
     // meta
     dta[0] = 0x00;
@@ -78,15 +101,15 @@ unsigned char MockSerial_CAN::recv(unsigned long *id, uchar *buf) {
     ++len;
     dta[5] = 0x41;
     ++len;
-    dta[6] = 0x00;
+    dta[6] = *id;
     ++len;
 
     // A
-    dta[7] = 0x5A;
+    dta[7] = a;
     ++len;
 
     // B
-    dta[8] = 0x64;
+    dta[8] = b;
     ++len;
 
     // C
@@ -101,28 +124,12 @@ unsigned char MockSerial_CAN::recv(unsigned long *id, uchar *buf) {
     dta[11] = 0x00;
     ++len;
 
-    if (len == 12) // Just to be sure, must be 12 here
+    for (int i = 0; i < 8; i++) // Store the message in the buffer
     {
-        /*unsigned long __id = 0;
-
-        for (int i = 0; i < 4; i++) // Store the id of the sender
-        {
-            __id <<= 8;
-            __id += dta[i];
-        }
-
-        *id = __id;
-         */
-        *id = 0x0C; // RPM PID
-
-        for (int i = 0; i < 8; i++) // Store the message in the buffer
-        {
-            buf[i] = dta[i + 4];
-        }
-        return 1;
+        buf[i] = dta[i + 4];
     }
+    return 1;
 
-    return 0;
 }
 
 unsigned char MockSerial_CAN::cmdOk(char *cmd) {
@@ -150,7 +157,6 @@ unsigned char MockSerial_CAN::cmdOk(char *cmd) {
             clear();
             return 1;
         }
-
     }
 }
 

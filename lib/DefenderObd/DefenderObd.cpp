@@ -12,7 +12,7 @@
 #define can_baud 9600 // 9600
 
 
-#define STANDARD_CAN_11BIT      1       // That depends on your car. some 1 some 0.
+#define STANDARD_CAN_11BIT      0       // That depends on your car. some 1 some 0.
 
 #if STANDARD_CAN_11BIT
 #define CAN_ID_PID          0x7DF
@@ -82,7 +82,7 @@ DefenderObd::DefenderObd(bool with_display) : with_display(with_display) {
 }
 
 int DefenderObd::num_parameters() {
-    return (int) sizeof(*parameters)/sizeof(parameters[0]);
+    return (int) sizeof(parameters)/sizeof(parameters[0]);
 }
 
 Parameter *DefenderObd::get_parameter(String name) {
@@ -110,33 +110,34 @@ bool DefenderObd::debug() {
         if (id < 2)
             return false;
 
-        if (with_display) {
-            lcd->clear();
-            lcd->setCursor(0, 0);
-            lcd->write_char(id);
-
-            lcd->setCursor(0, 1);
-        }
-        Serial.print("id: ");
-        Serial.print((int)id);
-        Serial.print(",");
+        Serial.print("id: 0x");
+        Serial.print((int)id, HEX);
+        Serial.print(", ");
+        Serial.print("id2: 0x");
+        Serial.print((int)dta[2], HEX);
+        Serial.print(", ");
 
         for(int i=0; i<8; i++)
         {
             Serial.print(i);
-            Serial.print(": ");
-            Serial.print((int)dta[i]);
-            Serial.print(",");
-
-            if (with_display)
-                lcd->write_char((int)dta[i]);
+            Serial.print(":0x");
+            Serial.print((int)dta[i],HEX);
+            Serial.print(", ");
         }
-        Serial.println();
+        Serial.println("DONE");
         Parameter *p = get_parameter(dta[2]); // id
         if (p) {
-            p->load_block(dta);
-            Serial.print("\tFOUND PARAMETER! Value: ");
+            Serial.print("\tFOUND PARAMETER! ID: ");
+            Serial.print(dta[2]);
+            Serial.print(" ");
+            Serial.print(p->get_name());
+            Serial.print(" with Value: ");
             Serial.println(p->get_current_value());
+
+            p->load_block(dta);
+            update_gauge(p->get_current_value(), p->get_maximum_value(), p->get_name());
+            Serial.println();
+            delay(500);
         }
         return true;
     }
@@ -156,26 +157,23 @@ void DefenderObd::show_message(String top, String bottom) {
 }
 
 void DefenderObd::update_gauge(int value, int max_value, String name) {
-
-    Serial.println(value);
     if (!with_display)
         return;
 
     unsigned int lcd_cols = 16;
-    unsigned int number_of_digits = 0;
-    int n = value;
-    do {
-        ++number_of_digits;
-        n /= 10;
-    } while (n);
+    unsigned int number_of_digits = String(value).length();
 
     lcd->setCursor(0, 0);
-    lcd->send_string(name.c_str());
-    for (unsigned int i = 0; i < lcd_cols-(unsigned int)name.length()-number_of_digits; ++i)
-        lcd->write_char(160); //(char)32);
-    lcd->send_string(String(value).c_str());
+    String head = name.substring(0, lcd_cols-1-number_of_digits);
+    unsigned int space = lcd_cols-head.length()-number_of_digits;
+
+    for (unsigned int i = 0; i < space; ++i)
+        head.concat((char)160);
+    head.concat(value);
+    lcd->send_string(head.c_str());
 
     lcd->setCursor(0, 1);
+
     unsigned int value_percentage = (unsigned int)(100.0 / (float)max_value * (float)value);
     unsigned int lcd_gauge_value = (unsigned int)((float)lcd_cols/ 100.0 * (float)value_percentage);
 
