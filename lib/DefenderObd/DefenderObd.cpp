@@ -5,6 +5,7 @@
 #include "DefenderObd.h"
 #include "parameters/EngineSpeed.h"
 #include "parameters/AbsoluteBarometricPressure.h"
+#include "parameters/OilTemperature.h"
 #include <Arduino.h>
 
 #define can_tx  12       // tx of serial can module, the yellow cable
@@ -60,25 +61,47 @@ unsigned long filt[12] =
 DefenderObd::DefenderObd(bool with_display) : with_display(with_display) {
     parameters[0] = new EngineSpeed(can);
     parameters[1] = new AbsoluteBarometricPressure(can);
-
-    can.begin(can_tx, can_rx, can_baud);
-    //can.setMask(mask);
-    //can.setFilt(filt);
+    parameters[2] = new OilTemperature(can);
 
     if (with_display) {
         lcd = new Waveshare_LCD1602_RGB(16, 2);  //16 characters and 2 lines of show
         lcd->init();
         lcd->noCursor();
         lcd->setRGB(255, 0, 255);
+
         lcd->setCursor(0, 0);
-
         lcd->send_string("K.I.T.T.T.T.");
-
         lcd->setCursor(0, 1);
-        lcd->send_string("Fucking Can-Bus");
-        delay(2000);
-        lcd->clear();
+        lcd->send_string("OBD PROTOTYPE");
+
+        delay(500);
     }
+
+    can.begin(can_tx, can_rx, can_baud);
+
+#if !MOCK_CAN
+    if(can.baudRate(SERIAL_RATE_115200)) {
+        Serial.println("Set Baudrate to 115200");
+        show_message("Baud Rate", "set to 115200");
+        delay(1000);
+    } else {
+        Serial.println("Could not set Baudrate to 115200");
+        show_message("Baud Rate", "failed to set");
+        delay(1000);
+    }
+
+    if(can.canRate(CAN_RATE_500)) {
+        Serial.println("Set CAN Rate to 500");
+        show_message("CAN Rate", "set to 500");
+        delay(1000);
+    } else {
+        Serial.println("Could not set CAN RAte to 500");
+        show_message("CAN Rate", "failed to set");
+        delay(1000);
+    }
+#endif
+    //can.setMask(mask);
+    //can.setFilt(filt);
 }
 
 int DefenderObd::num_parameters() {

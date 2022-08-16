@@ -5,7 +5,7 @@
 #ifndef DEFENDEROBD_DEFENDEROBD_H
 #define DEFENDEROBD_DEFENDEROBD_H
 
-#define MOCK_CAN      1       // That depends on your car. some 1 some 0.
+#define MOCK_CAN      0       // That depends on your car. some 1 some 0.
 
 #include "Parameter.h"
 
@@ -29,7 +29,7 @@ public:
     void update_gauge(int value, int max_value, String name);
     void show_message(String top, String bottom);
 private:
-    Parameter *parameters[2];
+    Parameter *parameters[3];
 #if MOCK_CAN
     MockSerial_CAN can;
 #else

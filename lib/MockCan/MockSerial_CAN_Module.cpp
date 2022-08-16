@@ -66,7 +66,7 @@ unsigned char MockSerial_CAN::recv(unsigned long *id, uchar *buf) {
     switch (millis() % 4) {
         case 0:
             *id = 0x0C; // RPM PID
-            a = 0x00 + random(20,120);
+            a = (unsigned char) 0x00 + (int) random(43,120);
             b = 0x64;
             break;
         case 1:
@@ -80,7 +80,7 @@ unsigned char MockSerial_CAN::recv(unsigned long *id, uchar *buf) {
             b = 0x00;
             break;
         case 3:
-            *id = 0x33; // Absolut Barometric Pressure
+            *id = 0x60; // Absolut Barometric Pressure
             a = 0x80;
             b = 0x00;
             break;

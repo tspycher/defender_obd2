@@ -10,7 +10,7 @@
 DefenderObd *obd;
 
 
-bool dump_mode = true;
+bool dump_mode = false;
 bool with_display = true;
 
 void setup() {
@@ -28,8 +28,10 @@ void loop() {
             if (!obd->debug())
                 break;
     } else {
-        int ids[] = {0x0C , 0x33};
-        for (int i = 0; i < 2; ++i) {
+        //int ids[] = {0x0C , 0x33, 0x5C};
+
+        int ids[] = {0x0C}; // only RPM
+        for (int i = 0; i < obd->num_parameters(); ++i) {
             Parameter *parameter = obd->get_parameter(ids[i]);
             if (!parameter) {
                 continue;

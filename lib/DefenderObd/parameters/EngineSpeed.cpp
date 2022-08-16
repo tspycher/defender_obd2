@@ -26,7 +26,7 @@ EngineSpeed::EngineSpeed(Serial_CAN &can): Parameter(can) {
     maximum_value = 16383;
     minimum_value = 0;
     data_bytes = 2;
-    previous_value = 10;
+    previous_value = 0;
 }
 #endif
 

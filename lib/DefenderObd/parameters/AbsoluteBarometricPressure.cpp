@@ -19,7 +19,7 @@ AbsoluteBarometricPressure::AbsoluteBarometricPressure(MockSerial_CAN &can) : Pa
 AbsoluteBarometricPressure::AbsoluteBarometricPressure(Serial_CAN &can) : Parameter(can) {
     pid = 0x33;
     name = "Absolute Barometric Pressure";
-    unit = "kPa";
+    unit = "hp";
     maximum_value = 255;
     minimum_value = 0;
     data_bytes = 1;
@@ -28,5 +28,5 @@ AbsoluteBarometricPressure::AbsoluteBarometricPressure(Serial_CAN &can) : Parame
 #endif
 
 int AbsoluteBarometricPressure::get_value() {
-    return get_a();
+    return get_a()*10;
 }
